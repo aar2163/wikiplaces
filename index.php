@@ -30,8 +30,21 @@
         text-overflow: ellipsis;
         width: 400px;
       }
+      #activity-input {
+        background-color: #fff;
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+        margin-left: 12px;
+        padding: 0 11px 0 13px;
+        text-overflow: ellipsis;
+        width: 400px;
+      }
 
       #pac-input:focus {
+        border-color: #4d90fe;
+      }
+      #activity-input:focus {
         border-color: #4d90fe;
       }
 
@@ -75,7 +88,6 @@ if(isset($_GET["lat"]))
    var pos = new google.maps.LatLng(lat,lon);
  <?php
   $query = $_GET["query"];
-  $query = "hiking";
   //$string = file_get_contents("$query.json");
   
   $string = exec("python query.py $lat $lon $query");
@@ -171,6 +183,7 @@ else
   var input = /** @type {HTMLInputElement} */(
       document.getElementById('pac-input'));
   map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+  var activity = document.getElementById('activity-input')
 
   var searchBox = new google.maps.places.SearchBox(
     /** @type {HTMLInputElement} */(input));
@@ -196,9 +209,10 @@ else
             });*/
      var lat = '?lat='.concat(places[0].geometry.location.A);
      var lon = '\&lon='.concat(places[0].geometry.location.F);
-     //throw new Error(lon);
+     var key = '\&query='.concat(activity.value);
+     //throw new Error(activity.value);
      //location.href = 'index.php';
-     location.search = lat.concat(lon);
+     location.search = (lat.concat(lon)).concat(key);
 
     if (places.length == 0) {
       return;
@@ -239,7 +253,8 @@ google.maps.event.addDomListener(window, 'load', initialize);
     </script>
   </head>
   <body>
-    <input id="pac-input" class="controls" type="text" placeholder="Type a location to search for hiking spots">
+    <input id="pac-input" class="controls" type="text" placeholder="Type a location">
+    <input id="activity-input" class="controls" type="text" placeholder="Type a keyword">
  <?php
 }
 
