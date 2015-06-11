@@ -59,8 +59,10 @@ var map;
 
 
 <?php
-if(isset($_GET["query"]))
+if(isset($_GET["lat"]))
 {
+ $lat = $_GET["lat"];
+ $lon = $_GET["lon"];
  ?>
  function initialize() {
    var mapOptions = {
@@ -68,11 +70,15 @@ if(isset($_GET["query"]))
    };
    map = new google.maps.Map(document.getElementById('map-canvas'),
        mapOptions);
-   var pos = new google.maps.LatLng(40.807833,-73.962126);
+   var lat = <?php echo $lat; ?>;
+   var lon = <?php echo $lon; ?>;
+   var pos = new google.maps.LatLng(lat,lon);
  <?php
   $query = $_GET["query"];
+  $query = "hiking";
   //$string = file_get_contents("$query.json");
-  $string = exec("python query.py $query");
+  
+  $string = exec("python query.py $lat $lon $query");
   #echo 1;
   #system('echo 1');
   $data = json_decode($string, true);
@@ -109,11 +115,11 @@ if(isset($_GET["query"]))
   ?>
   //var pos_gunks = new google.maps.LatLng(41.7038888889,-74.3447222222);
 
-      var infowindow = new google.maps.InfoWindow({
+      /*var infowindow = new google.maps.InfoWindow({
         map: map,
         position: pos,
         content: 'Columbia University'
-      });
+      });*/
       map.setCenter(pos);
 
   // Try HTML5 geolocation
@@ -186,9 +192,11 @@ else
 
                 }
             });*/
-
-     location.href = 'index.php';
-     location.search = '?query=hiking';
+     var lat = '?lat='.concat(places[0].geometry.location.A);
+     var lon = '\&lon='.concat(places[0].geometry.location.F);
+     //throw new Error(lon);
+     //location.href = 'index.php';
+     location.search = lat.concat(lon);
 
     if (places.length == 0) {
       return;
