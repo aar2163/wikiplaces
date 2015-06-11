@@ -161,8 +161,10 @@ else
   });
 
   var defaultBounds = new google.maps.LatLngBounds(
-      new google.maps.LatLng(-33.8902, 151.1759),
-      new google.maps.LatLng(-33.8474, 151.2631));
+      //new google.maps.LatLng(-33.8902, 151.1759),
+      //new google.maps.LatLng(-33.8474, 151.2631));
+      new google.maps.LatLng(40.8902, -73.1759),
+      new google.maps.LatLng(40.8474, -73.2631));
   map.fitBounds(defaultBounds);
 
   // Create the search box and link it to the UI element.
@@ -201,21 +203,11 @@ else
     if (places.length == 0) {
       return;
     }
-    for (var i = 0, marker; marker = markers[i]; i++) {
-      marker.setMap(null);
-    }
 
     // For each place, get the icon, place name, and location.
     markers = [];
     var bounds = new google.maps.LatLngBounds();
     for (var i = 0, place; place = places[i]; i++) {
-      var image = {
-        url: place.icon,
-        size: new google.maps.Size(71, 71),
-        origin: new google.maps.Point(0, 0),
-        anchor: new google.maps.Point(17, 34),
-        scaledSize: new google.maps.Size(25, 25)
-      };
 
       // Create a marker for each place.
       var marker = new google.maps.Marker({
@@ -247,7 +239,7 @@ google.maps.event.addDomListener(window, 'load', initialize);
     </script>
   </head>
   <body>
-    <input id="pac-input" class="controls" type="text" placeholder="Search Box">
+    <input id="pac-input" class="controls" type="text" placeholder="Type a location to search for hiking spots">
  <?php
 }
 

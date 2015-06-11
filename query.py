@@ -35,14 +35,21 @@ entry = {}
 
 n = 0
 for i in cursor:
+  print i['revision']['text_array'][index]
   lon,lat = i['location']['coordinates']
   title = i['title']
   title = title.encode('utf-8')
+  print title
+  title = re.sub(r'(?<!\\)\'',r'\'',title)
+  print title
   entry[title] = {}
   entry[title]['lat'] = lat
   entry[title]['lon']  = lon
   underline = re.sub(r' ','_',title)
   url = 'http://en.wikipedia.org/wiki/' + underline
+  print url
+  url = re.sub(r'(?<!\\)\'',r'\'',url)
+  print url
   entry[title]['url'] = url
   #print underline
   #print "{},{}".format(lat,lon)
