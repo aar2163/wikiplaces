@@ -4,7 +4,8 @@ import json
 import sys
 
 
-connection = pymongo.MongoClient("mongodb://localhost")
+#connection = pymongo.MongoClient("mongodb://localhost")
+connection = pymongo.MongoClient("mongodb://104.236.201.75")
 
 db = connection.wikipedia
 
@@ -23,9 +24,14 @@ origin = [ float(sys.argv[2]), float(sys.argv[1]) ]
 
 query = {"location": {"$near": {"$geometry": \
          {"type": "Point", "coordinates": origin}, \
-          "$maxDistance": 150000, "$minDistance": 0}}, str_index : 1}
+          "$maxDistance": 150000, "$minDistance": 0}}, str_index : {"$gt" : 1}}
+
+projection = {"title" : 1, \
+              "revision.text_array" : {"$slice" : [index,1]}, \
+              "location" : 1}
+
 #cursor = pages.find(query,{'title' : 1, 'location' : 1})
-cursor = pages.find(query)
+cursor = pages.find(query, projection)
 
 
 fname = word + '.json'
@@ -34,8 +40,10 @@ fname = word + '.json'
 entry = {}
 
 n = 0
+print index
 for i in cursor:
-  print i['revision']['text_array'][index]
+  #print i
+  print i['revision']['text_array']
   lon,lat = i['location']['coordinates']
   title = i['title']
   title = title.encode('utf-8')
@@ -54,8 +62,8 @@ for i in cursor:
   #print underline
   #print "{},{}".format(lat,lon)
   n +=1
-  if(n > 10):
-   break
+  #if(n > 10):
+  # break
 
 #print n
 
