@@ -98,6 +98,9 @@ if(isset($_GET["lat"]))
   var lon = <?php echo $lon; ?>;
   var pos = new google.maps.LatLng(lat,lon);
   markerBounds.extend(pos);
+
+  var places = new Array();
+
  <?php
   $count = 0;
   foreach ($data as $key => $entry)
@@ -105,9 +108,13 @@ if(isset($_GET["lat"]))
    $name_pos = "pos_$count";
    $lat = $entry['lat'];
    $lon = $entry['lon'];
-   echo "var $name_pos = new google.maps.LatLng($lat,$lon);\n";
+   echo "var location = new google.maps.LatLng($lat,$lon);\n";
+   echo "var title = '$key\\nClick to go to Wikipedia'\n";
+   echo "var object = {'location' : location, 'title' : title};\n";
+   echo "places.push(object);\n";
+   //echo "places.push(item);\n";
 
-   $name_mark = "mark_$count";
+   /*$name_mark = "mark_$count";
    echo "var $name_mark = new google.maps.Marker({\n";
    echo "   map: map,\n";
    echo "   position: $name_pos,\n";
@@ -124,32 +131,34 @@ if(isset($_GET["lat"]))
 
    echo "google.maps.event.addListener($name_mark, 'click', function() {\n";
    echo "window.location.href = '$url'\n";
-   echo "});\n";
+   echo "});\n";*/
  
    $count++;
   }
   ?>
 
-  /*for (var i = 0, place; place = places[i]; i++) {
-   var image = {
-     url: place.icon,
+  for (var i = 0, place; place = places[i]; i++) {
+   /*var image = {
+    url: place.icon,
      size: new google.maps.Size(71, 71),
      origin: new google.maps.Point(0, 0),
      anchor: new google.maps.Point(17, 34),
      scaledSize: new google.maps.Size(25, 25)
-   };
+   };*/
+
+   //throw new Error(place.location.A);
 
    var marker = new google.maps.Marker({
      map: map,
-     icon: image,
+     //icon: image,
      title: place.name,
-     position: place.geometry.location
+     position: place.location
    });
 
    //placesList.innerHTML += '<li>' + place.name + '</li>';
 
-   markerBounds.extend(place.geometry.location);
-  }*/
+   markerBounds.extend(place.location);
+  }
   map.fitBounds(markerBounds);
   map.setCenter(pos);
  }
