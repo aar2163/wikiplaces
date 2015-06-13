@@ -124,7 +124,7 @@ if(isset($_GET["lat"]))
 {
  $lat = $_GET["lat"];
  $lon = $_GET["lon"];
- $query = $_GET["query"];
+ $query = strtolower($_GET["query"]);
  $string = exec("python query.py $lat $lon $query");
  $data = json_decode($string, true);
  echo "var image = '$query.png'\n";
@@ -203,9 +203,16 @@ if(isset($_GET["lat"]))
   }
   ?>
 
+  var maxresults = 10;
+
+  if (places.length < maxresults)
+  {
+   maxresults = places.length;
+  }
+
   //for (var i = 0, place; place = places[i]; i++) {
   //for (var i = 0; i < places.length; i++) {
-  for (var i = 0; i < 10; i++) {
+  for (var i = 0; i < maxresults; i++) {
    var place = places[i];
    /*var image = {
     url: place.icon,
