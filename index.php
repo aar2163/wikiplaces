@@ -76,6 +76,10 @@ if(isset($_GET["lat"]))
 {
  $lat = $_GET["lat"];
  $lon = $_GET["lon"];
+ $query = $_GET["query"];
+ $string = exec("python query.py $lat $lon $query");
+ $data = json_decode($string, true);
+ echo "var image = '$query.png'\n";
  
  ?>
  function initialize() {
@@ -85,21 +89,16 @@ if(isset($_GET["lat"]))
    map = new google.maps.Map(document.getElementById('map-canvas'),
        mapOptions);
 
-   var markerBounds = new google.maps.LatLngBounds();
-   var lat = <?php echo $lat; ?>;
-   var lon = <?php echo $lon; ?>;
-   var pos = new google.maps.LatLng(lat,lon);
+   createMarkers(map);
+
+ }
+ function createMarkers(map) {
+  var markerBounds = new google.maps.LatLngBounds();
+  var lat = <?php echo $lat; ?>;
+  var lon = <?php echo $lon; ?>;
+  var pos = new google.maps.LatLng(lat,lon);
+  markerBounds.extend(pos);
  <?php
-  $query = $_GET["query"];
-  //$string = file_get_contents("$query.json");
-  
-  $string = exec("python query.py $lat $lon $query");
-  #echo 1;
-  #system('echo 1');
-  $data = json_decode($string, true);
-
-  echo "var image = '$query.png'\n";
-
   $count = 0;
   foreach ($data as $key => $entry)
   {
@@ -130,36 +129,29 @@ if(isset($_GET["lat"]))
    $count++;
   }
   ?>
-  //var pos_gunks = new google.maps.LatLng(41.7038888889,-74.3447222222);
 
-      /*var infowindow = new google.maps.InfoWindow({
-        map: map,
-        position: pos,
-        content: 'Columbia University'
-      });*/
-      map.setCenter(pos);
-      map.fitBounds(markerBounds);
+  /*for (var i = 0, place; place = places[i]; i++) {
+   var image = {
+     url: place.icon,
+     size: new google.maps.Size(71, 71),
+     origin: new google.maps.Point(0, 0),
+     anchor: new google.maps.Point(17, 34),
+     scaledSize: new google.maps.Size(25, 25)
+   };
 
-  // Try HTML5 geolocation
-  /*if(navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(position) {
-      var pos = new google.maps.LatLng(position.coords.latitude,
-                                       position.coords.longitude);
+   var marker = new google.maps.Marker({
+     map: map,
+     icon: image,
+     title: place.name,
+     position: place.geometry.location
+   });
 
-      var infowindow = new google.maps.InfoWindow({
-        map: map,
-        position: pos,
-        content: 'Location found using HTML5.'
-      });
+   //placesList.innerHTML += '<li>' + place.name + '</li>';
 
-      map.setCenter(pos);
-    }, function() {
-      handleNoGeolocation(true);
-    });
-  } else {
-    // Browser doesn't support Geolocation
-    handleNoGeolocation(false);
+   markerBounds.extend(place.geometry.location);
   }*/
+  map.fitBounds(markerBounds);
+  map.setCenter(pos);
  }
  google.maps.event.addDomListener(window, 'load', initialize);
     </script>

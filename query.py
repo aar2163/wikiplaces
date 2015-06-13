@@ -33,7 +33,7 @@ str_index = "revision.text_array." + str(index)
 origin = [ float(sys.argv[2]), float(sys.argv[1]) ]
 
 
-nmin = 10
+nmin = 1
 
 query = {"location": {"$near": {"$geometry": \
          {"type": "Point", "coordinates": origin}, \
@@ -89,8 +89,8 @@ for i in cursor:
   #print underline
   #print "{},{}".format(lat,lon)
   n +=1
-  if(n > 10):
-   break
+  #if(n > 10):
+  # break
 
 #print n
 
