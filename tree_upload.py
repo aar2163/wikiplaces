@@ -233,7 +233,7 @@ for line in f:
  vocabulary.append(line.strip()) 
 
 #vectorizer = CountVectorizer( analyzer='word', stop_words = 'english', min_df = 0.005, max_df = 0.1, strip_accents = 'unicode', binary = True, dtype = np.int8 )
-vectorizer = CountVectorizer( analyzer='word', stop_words = 'english', vocabulary = vocabulary, strip_accents = 'unicode', dtype = np.int8 )
+vectorizer = CountVectorizer( analyzer='word', stop_words = 'english', vocabulary = vocabulary, strip_accents = 'unicode', dtype = np.int16 )
 X = vectorizer.fit_transform( process_map( sys.argv[1], pages, page_list ))
 
 
