@@ -20,8 +20,9 @@ def should_save(text):
 
 def get_2coords(line):
  array = []
- for j in re.finditer(r'\|\w+',line):
-  array.append(j.group(0)[1:])
+ #for j in re.finditer(r'\|\w+',line):
+ for j in re.findall(r'\|\s*([0-9NEWS]+)',line):
+  array.append(j)
 
  lat = lon = None
 
@@ -44,6 +45,7 @@ def get_2coords(line):
   except:
    pass
  try:
+  #print 'toaki2', array[7]
   sign = get_sign(array[7])
   lon = deg_to_decimal(deg,sign)
  except:
@@ -57,18 +59,20 @@ def get_coord(line):
  deg = []
  sign = 1
 
- for j in re.finditer(r'=\s*-?\d+\.?\d*',line):
-  s = j.group(0)[1:].strip()
-  print 's',s
+ #for j in re.finditer(r'=\s*-?\d+\.?\d*',line):
+ for j in re.findall(r'(?:long|lat)\_\w+\s*=\s*([0-9EWNS]+)',line):
+  s = j
+  #print 's',s
   try:
    deg.append(float(s))
   except:
    # Last element encodes the sign
    sign = get_sign(s)
+   #print 'sign', s, sign
    if (sign == None):
     return None
 
- print deg,line
+ #print deg,line
 
  if(len(deg) == 0):
   return None
@@ -84,6 +88,7 @@ def get_sign(s):
   sign = 1
  else:
   sign = None
+ #print 'to aki', s
  return sign
 
 def deg_to_decimal(deg,sign):
@@ -168,6 +173,22 @@ def process_map(filename,pages, page_list):
     if(title.text == chosen_title):
      print line
 
+    elat = re.findall(r'latitude\s*=\s*([\d\.\-]+)', line)
+    elon = re.findall(r'longitude\s*=\s*([\d\.\-]+)', line)
+
+    if elat:
+     try:
+      lat = float(elat[0])
+      bLat = True
+     except:
+      pass
+    if elon:
+     try:
+      lon = float(elon[0])
+      bLon = True
+     except:
+      pass
+
     if(re.match(r'\| lat_\w+\s*=',line)):
      latline = latline + line
      bLat = True
@@ -177,8 +198,11 @@ def process_map(filename,pages, page_list):
 
     # get_2coords is for format 40|10|5|N|70|20|30|W
 
-    if(re.match(r'\| coordinates\s*=',line)):
+    #if(re.match(r'\| coordinates\s*=',line)):
+    # lat,lon = get_2coords(line)
+    if re.search(r'\d+\|\d+\|\d+\|[NSEW]\|\d+\|\d+\|\d+\|[NSEW]', line):
      lat,lon = get_2coords(line)
+     
 
     # Now call get_coord
     if(re.search(r'lat_NS\s*=',line)):
@@ -192,12 +216,13 @@ def process_map(filename,pages, page_list):
 
     if(lat and lon):
      coord = [lon,lat]
-     #print coord
+     print coord
      break
 
    if coord:
     nsaved += 1
     page = make_dict(element)
+    #print page['title']
     page['location'] = {'type': 'Point', 'coordinates': coord}
 
     #Insert document into MongoDB collection
@@ -233,7 +258,7 @@ for line in f:
  vocabulary.append(line.strip()) 
 
 #vectorizer = CountVectorizer( analyzer='word', stop_words = 'english', min_df = 0.005, max_df = 0.1, strip_accents = 'unicode', binary = True, dtype = np.int8 )
-vectorizer = CountVectorizer( analyzer='word', stop_words = 'english', vocabulary = vocabulary, strip_accents = 'unicode', dtype = np.int8 )
+vectorizer = CountVectorizer( analyzer='word', stop_words = 'english', vocabulary = vocabulary, strip_accents = 'unicode', dtype = np.int16 )
 X = vectorizer.fit_transform( process_map( sys.argv[1], pages, page_list ))
 
 
