@@ -33,12 +33,13 @@ str_index = "revision.text_array." + str(index)
 origin = [ float(sys.argv[2]), float(sys.argv[1]) ]
 
 
+nmin = 10
 
 query = {"location": {"$near": {"$geometry": \
          {"type": "Point", "coordinates": origin}, \
-          "$maxDistance": 150000, "$minDistance": 0}}, str_index : {"$gt" : 1}}
+          "$maxDistance": 150000, "$minDistance": 0}}, str_index : {"$gt" : nmin}}
 
-query = {str_index : {"$gt" : 1}, \
+query = {str_index : {"$gt" : nmin}, \
          "location": {"$near": {"$geometry": \
          {"type": "Point", "coordinates": origin}, \
           "$maxDistance": 150000, "$minDistance": 0}}}
@@ -69,7 +70,7 @@ entry = {}
 n = 0
 print index
 for i in cursor:
-  print i['revision']['text_array']
+  #print i['revision']['text_array']
   lon,lat = i['location']['coordinates']
   title = i['title']
   title = title.encode('utf-8')

@@ -84,6 +84,8 @@ if(isset($_GET["lat"]))
    };
    map = new google.maps.Map(document.getElementById('map-canvas'),
        mapOptions);
+
+   var markerBounds = new google.maps.LatLngBounds();
    var lat = <?php echo $lat; ?>;
    var lon = <?php echo $lon; ?>;
    var pos = new google.maps.LatLng(lat,lon);
@@ -117,6 +119,8 @@ if(isset($_GET["lat"]))
    echo "   title: '$key\\nClick to go to Wikipedia'\n";
    echo "});\n";
 
+   echo "markerBounds.extend($name_pos);";
+
    $url = $entry['url'];
 
    echo "google.maps.event.addListener($name_mark, 'click', function() {\n";
@@ -134,6 +138,7 @@ if(isset($_GET["lat"]))
         content: 'Columbia University'
       });*/
       map.setCenter(pos);
+      map.fitBounds(markerBounds);
 
   // Try HTML5 geolocation
   /*if(navigator.geolocation) {
