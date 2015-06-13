@@ -148,15 +148,26 @@ if(isset($_GET["lat"]))
 
  <?php
   $count = 0;
+  function cmp($a, $b) {
+    if ($a['count'] == $b['count']) {
+        return 0;
+    }
+    return ($a['count'] > $b['count']) ? -1 : 1;
+  }
+  uasort($data, 'cmp');
+
   foreach ($data as $key => $entry)
   {
    $name_pos = "pos_$count";
-   $lat = $entry['lat'];
-   $lon = $entry['lon'];
-   $url = $entry['url'];
+   $lat   = $entry['lat'];
+   $lon   = $entry['lon'];
+   $url   = $entry['url'];
+   $count = $entry['count'];
+
    echo "var location = new google.maps.LatLng($lat,$lon);\n";
-   echo "var title = '$key\\nClick to go to Wikipedia'\n";
-   echo "var name = '$key'\n";
+   echo "var title = '$key\\nClick to go to Wikipedia'\n;";
+   echo "var name = '$key'\n;";
+   echo "var count = $count\n;";
    echo "var object = {'location' : location, 'name' : name, 'title' : title, 'url' : '$url'};\n";
    //echo "var object = {'location' : location, 'title' : title};\n";
    echo "places.push(object);\n";

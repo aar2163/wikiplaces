@@ -67,6 +67,7 @@ fname = word + '.json'
 #output = open(fname, 'w')
 entry = {}
 
+
 n = 0
 print index
 for i in cursor:
@@ -80,6 +81,7 @@ for i in cursor:
   entry[title] = {}
   entry[title]['lat'] = lat
   entry[title]['lon']  = lon
+  entry[title]['count'] = int(i['revision']['text_array'][0])
   underline = re.sub(r' ','_',title)
   url = 'http://en.wikipedia.org/wiki/' + underline
   print url
