@@ -20,6 +20,46 @@
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
       }
 
+      #results {
+        font-family: Arial, Helvetica, sans-serif;
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        margin-top: -195px;
+        height: 380px;
+        width: 200px;
+        padding: 5px;
+        z-index: 5;
+        border: 1px solid #999;
+        background: #fff;
+      }
+      h2 {
+        font-size: 22px;
+        margin: 0 0 5px 0;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        height: 321px;
+        width: 200px;
+        overflow-y: scroll;
+      }
+      li {
+        background-color: #f1f1f1;
+        padding: 10px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      li:nth-child(odd) {
+        background-color: #fcfcfc;
+      }
+      #more {
+        width: 100%;
+        margin: 5px 0 0 0;
+      }
+
       #pac-input {
         background-color: #fff;
         font-family: Roboto;
@@ -89,6 +129,8 @@ if(isset($_GET["lat"]))
    map = new google.maps.Map(document.getElementById('map-canvas'),
        mapOptions);
 
+   placesList = document.getElementById('places');
+
    createMarkers(map);
 
  }
@@ -114,7 +156,8 @@ if(isset($_GET["lat"]))
    $url = $entry['url'];
    echo "var location = new google.maps.LatLng($lat,$lon);\n";
    echo "var title = '$key\\nClick to go to Wikipedia'\n";
-   echo "var object = {'location' : location, 'title' : title, 'url' : '$url'};\n";
+   echo "var name = '$key'\n";
+   echo "var object = {'location' : location, 'name' : name, 'title' : title, 'url' : '$url'};\n";
    //echo "var object = {'location' : location, 'title' : title};\n";
    echo "places.push(object);\n";
    //echo "places.push(item);\n";
@@ -141,7 +184,10 @@ if(isset($_GET["lat"]))
   }
   ?>
 
-  for (var i = 0, place; place = places[i]; i++) {
+  //for (var i = 0, place; place = places[i]; i++) {
+  //for (var i = 0; i < places.length; i++) {
+  for (var i = 0; i < 10; i++) {
+   var place = places[i];
    /*var image = {
     url: place.icon,
      size: new google.maps.Size(71, 71),
@@ -183,7 +229,7 @@ if(isset($_GET["lat"]))
 
 
 
-   //placesList.innerHTML += '<li>' + place.name + '</li>';
+   placesList.innerHTML += '<li>' + place.name + '</li>';
 
    markerBounds.extend(place.location);
   }
@@ -297,6 +343,14 @@ google.maps.event.addDomListener(window, 'load', initialize);
 
 
  <div id="map-canvas"></div>
+   <?php
+    if(isset($_GET["lat"])) { ?>
+    <div id="results">
+      <h2>Results</h2>
+      <ul id="places"></ul>
+      <button id="more">More results</button>
+    </div>
+  <?php } ?>
   </body>
 </html>
 
