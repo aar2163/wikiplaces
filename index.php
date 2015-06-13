@@ -19,6 +19,14 @@
         outline: none;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
       }
+      a:link, a:visited {
+        color: #8eac1a;
+        }
+
+      a:hover, a:active {
+        color: #708c00;
+        }
+
 
       #results {
         font-family: Arial, Helvetica, sans-serif;
@@ -240,7 +248,7 @@ if(isset($_GET["lat"]))
 
 
 
-   placesList.innerHTML += '<li>' + place.name + '</li>';
+   placesList.innerHTML += '<li>' + '<a href="' + place.url + '">' + place.name + '</a></li>';
 
    markerBounds.extend(place.location);
   }
