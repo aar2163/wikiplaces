@@ -100,6 +100,9 @@ if(isset($_GET["lat"]))
   markerBounds.extend(pos);
 
   var places = new Array();
+  var attributions = new Array();
+  var markers = new Array();
+  var urls = new Array();
 
  <?php
   $count = 0;
@@ -108,9 +111,11 @@ if(isset($_GET["lat"]))
    $name_pos = "pos_$count";
    $lat = $entry['lat'];
    $lon = $entry['lon'];
+   $url = $entry['url'];
    echo "var location = new google.maps.LatLng($lat,$lon);\n";
    echo "var title = '$key\\nClick to go to Wikipedia'\n";
-   echo "var object = {'location' : location, 'title' : title};\n";
+   echo "var object = {'location' : location, 'title' : title, 'url' : '$url'};\n";
+   //echo "var object = {'location' : location, 'title' : title};\n";
    echo "places.push(object);\n";
    //echo "places.push(item);\n";
 
@@ -127,7 +132,6 @@ if(isset($_GET["lat"]))
 
    echo "markerBounds.extend($name_pos);";
 
-   $url = $entry['url'];
 
    echo "google.maps.event.addListener($name_mark, 'click', function() {\n";
    echo "window.location.href = '$url'\n";
@@ -146,14 +150,38 @@ if(isset($_GET["lat"]))
      scaledSize: new google.maps.Size(25, 25)
    };*/
 
-   //throw new Error(place.location.A);
+
+   var attribution = {
+    iosDeepLinkId : 'sei lah', 
+    source: 'wikiplaces', 
+    webUrl: place.url};
+
+   urls.push(place.url);
+
+   attributions.push(attribution);
+
+   //throw new Error(place.url);
 
    var marker = new google.maps.Marker({
      map: map,
      //icon: image,
-     title: place.name,
-     position: place.location
+     title: place.title,
+     position: place.location,
+     attribution : { iosDeepLinkId: 'sei lah',
+                     source: 'wikiplaces',
+                     webUrl: String(i)}
    });
+
+   markers.push(marker);
+
+   google.maps.event.addListener(marker, 'click', (function(marker, i) 
+   {
+    return function() {
+     window.location.href = places[i].url;
+    }
+   })(marker, i));
+
+
 
    //placesList.innerHTML += '<li>' + place.name + '</li>';
 
