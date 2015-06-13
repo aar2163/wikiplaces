@@ -19,6 +19,54 @@
         outline: none;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
       }
+      a:link, a:visited {
+        color: #8eac1a;
+        }
+
+      a:hover, a:active {
+        color: #708c00;
+        }
+
+
+      #results {
+        font-family: Arial, Helvetica, sans-serif;
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        margin-top: -195px;
+        height: 380px;
+        width: 200px;
+        padding: 5px;
+        z-index: 5;
+        border: 1px solid #999;
+        background: #fff;
+      }
+      h2 {
+        font-size: 22px;
+        margin: 0 0 5px 0;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        height: 321px;
+        width: 200px;
+        overflow-y: scroll;
+      }
+      li {
+        background-color: #f1f1f1;
+        padding: 10px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      li:nth-child(odd) {
+        background-color: #fcfcfc;
+      }
+      #more {
+        width: 100%;
+        margin: 5px 0 0 0;
+      }
 
       #pac-input {
         background-color: #fff;
@@ -76,6 +124,10 @@ if(isset($_GET["lat"]))
 {
  $lat = $_GET["lat"];
  $lon = $_GET["lon"];
+ $query = strtolower($_GET["query"]);
+ $string = exec("python query.py $lat $lon $query");
+ $data = json_decode($string, true);
+ echo "var image = '$query.png'\n";
  
  ?>
  function initialize() {
@@ -85,30 +137,51 @@ if(isset($_GET["lat"]))
    map = new google.maps.Map(document.getElementById('map-canvas'),
        mapOptions);
 
-   var markerBounds = new google.maps.LatLngBounds();
-   var lat = <?php echo $lat; ?>;
-   var lon = <?php echo $lon; ?>;
-   var pos = new google.maps.LatLng(lat,lon);
+   placesList = document.getElementById('places');
+
+   createMarkers(map);
+
+ }
+ function createMarkers(map) {
+  var markerBounds = new google.maps.LatLngBounds();
+  var lat = <?php echo $lat; ?>;
+  var lon = <?php echo $lon; ?>;
+  var pos = new google.maps.LatLng(lat,lon);
+  markerBounds.extend(pos);
+
+  var places = new Array();
+  var attributions = new Array();
+  var markers = new Array();
+  var urls = new Array();
+
  <?php
-  $query = $_GET["query"];
-  //$string = file_get_contents("$query.json");
-  
-  $string = exec("python query.py $lat $lon $query");
-  #echo 1;
-  #system('echo 1');
-  $data = json_decode($string, true);
-
-  echo "var image = '$query.png'\n";
-
   $count = 0;
+  function cmp($a, $b) {
+    if ($a['count'] == $b['count']) {
+        return 0;
+    }
+    return ($a['count'] > $b['count']) ? -1 : 1;
+  }
+  uasort($data, 'cmp');
+
   foreach ($data as $key => $entry)
   {
    $name_pos = "pos_$count";
-   $lat = $entry['lat'];
-   $lon = $entry['lon'];
-   echo "var $name_pos = new google.maps.LatLng($lat,$lon);\n";
+   $lat   = $entry['lat'];
+   $lon   = $entry['lon'];
+   $url   = $entry['url'];
+   $count = $entry['count'];
 
-   $name_mark = "mark_$count";
+   echo "var location = new google.maps.LatLng($lat,$lon);\n";
+   echo "var title = '$key\\nClick to go to Wikipedia'\n;";
+   echo "var name = '$key'\n;";
+   echo "var count = $count\n;";
+   echo "var object = {'location' : location, 'name' : name, 'title' : title, 'url' : '$url'};\n";
+   //echo "var object = {'location' : location, 'title' : title};\n";
+   echo "places.push(object);\n";
+   //echo "places.push(item);\n";
+
+   /*$name_mark = "mark_$count";
    echo "var $name_mark = new google.maps.Marker({\n";
    echo "   map: map,\n";
    echo "   position: $name_pos,\n";
@@ -121,45 +194,73 @@ if(isset($_GET["lat"]))
 
    echo "markerBounds.extend($name_pos);";
 
-   $url = $entry['url'];
 
    echo "google.maps.event.addListener($name_mark, 'click', function() {\n";
    echo "window.location.href = '$url'\n";
-   echo "});\n";
+   echo "});\n";*/
  
    $count++;
   }
   ?>
-  //var pos_gunks = new google.maps.LatLng(41.7038888889,-74.3447222222);
 
-      /*var infowindow = new google.maps.InfoWindow({
-        map: map,
-        position: pos,
-        content: 'Columbia University'
-      });*/
-      map.setCenter(pos);
-      map.fitBounds(markerBounds);
+  var maxresults = 10;
 
-  // Try HTML5 geolocation
-  /*if(navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(position) {
-      var pos = new google.maps.LatLng(position.coords.latitude,
-                                       position.coords.longitude);
+  if (places.length < maxresults)
+  {
+   maxresults = places.length;
+  }
 
-      var infowindow = new google.maps.InfoWindow({
-        map: map,
-        position: pos,
-        content: 'Location found using HTML5.'
-      });
+  //for (var i = 0, place; place = places[i]; i++) {
+  //for (var i = 0; i < places.length; i++) {
+  for (var i = 0; i < maxresults; i++) {
+   var place = places[i];
+   /*var image = {
+    url: place.icon,
+     size: new google.maps.Size(71, 71),
+     origin: new google.maps.Point(0, 0),
+     anchor: new google.maps.Point(17, 34),
+     scaledSize: new google.maps.Size(25, 25)
+   };*/
 
-      map.setCenter(pos);
-    }, function() {
-      handleNoGeolocation(true);
-    });
-  } else {
-    // Browser doesn't support Geolocation
-    handleNoGeolocation(false);
-  }*/
+
+   var attribution = {
+    iosDeepLinkId : 'sei lah', 
+    source: 'wikiplaces', 
+    webUrl: place.url};
+
+   urls.push(place.url);
+
+   attributions.push(attribution);
+
+   //throw new Error(place.url);
+
+   var marker = new google.maps.Marker({
+     map: map,
+     //icon: image,
+     title: place.title,
+     position: place.location,
+     attribution : { iosDeepLinkId: 'sei lah',
+                     source: 'wikiplaces',
+                     webUrl: String(i)}
+   });
+
+   markers.push(marker);
+
+   google.maps.event.addListener(marker, 'click', (function(marker, i) 
+   {
+    return function() {
+     window.location.href = places[i].url;
+    }
+   })(marker, i));
+
+
+
+   placesList.innerHTML += '<li>' + '<a href="' + place.url + '">' + place.name + '</a></li>';
+
+   markerBounds.extend(place.location);
+  }
+  map.fitBounds(markerBounds);
+  map.setCenter(pos);
  }
  google.maps.event.addDomListener(window, 'load', initialize);
     </script>
@@ -268,6 +369,14 @@ google.maps.event.addDomListener(window, 'load', initialize);
 
 
  <div id="map-canvas"></div>
+   <?php
+    if(isset($_GET["lat"])) { ?>
+    <div id="results">
+      <h2>Results</h2>
+      <ul id="places"></ul>
+      <button id="more">More results</button>
+    </div>
+  <?php } ?>
   </body>
 </html>
 

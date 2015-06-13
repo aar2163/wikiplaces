@@ -33,7 +33,7 @@ str_index = "revision.text_array." + str(index)
 origin = [ float(sys.argv[2]), float(sys.argv[1]) ]
 
 
-nmin = 10
+nmin = 1
 
 query = {"location": {"$near": {"$geometry": \
          {"type": "Point", "coordinates": origin}, \
@@ -67,6 +67,7 @@ fname = word + '.json'
 #output = open(fname, 'w')
 entry = {}
 
+
 n = 0
 print index
 for i in cursor:
@@ -80,6 +81,7 @@ for i in cursor:
   entry[title] = {}
   entry[title]['lat'] = lat
   entry[title]['lon']  = lon
+  entry[title]['count'] = int(i['revision']['text_array'][0])
   underline = re.sub(r' ','_',title)
   url = 'http://en.wikipedia.org/wiki/' + underline
   print url
@@ -89,8 +91,8 @@ for i in cursor:
   #print underline
   #print "{},{}".format(lat,lon)
   n +=1
-  if(n > 10):
-   break
+  #if(n > 10):
+  # break
 
 #print n
 
