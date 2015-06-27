@@ -1,120 +1,14 @@
+<?php include "header.php"; ?>
 <!DOCTYPE html>
 <html>
   <head>
+    <title>Wikiplaces - Data Incubator - Andre Ribeiro</title>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
-    <style>
-      html, body, #map-canvas {
-        height: 100%;
-        margin: 0px;
-        padding: 0px
-      }
-      .controls {
-        margin-top: 16px;
-        border: 1px solid transparent;
-        border-radius: 2px 0 0 2px;
-        box-sizing: border-box;
-        -moz-box-sizing: border-box;
-        height: 32px;
-        outline: none;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-      }
-      a:link, a:visited {
-        color: #8eac1a;
-        }
-
-      a:hover, a:active {
-        color: #708c00;
-        }
-
-
-      #results {
-        font-family: Arial, Helvetica, sans-serif;
-        position: absolute;
-        right: 5px;
-        top: 50%;
-        margin-top: -195px;
-        height: 380px;
-        width: 200px;
-        padding: 5px;
-        z-index: 5;
-        border: 1px solid #999;
-        background: #fff;
-      }
-      h2 {
-        font-size: 22px;
-        margin: 0 0 5px 0;
-      }
-      ul {
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
-        height: 321px;
-        width: 200px;
-        overflow-y: scroll;
-      }
-      li {
-        background-color: #f1f1f1;
-        padding: 10px;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden;
-      }
-      li:nth-child(odd) {
-        background-color: #fcfcfc;
-      }
-      #more {
-        width: 100%;
-        margin: 5px 0 0 0;
-      }
-
-      #pac-input {
-        background-color: #fff;
-        font-family: Roboto;
-        font-size: 15px;
-        font-weight: 300;
-        margin-left: 12px;
-        padding: 0 11px 0 13px;
-        text-overflow: ellipsis;
-        width: 400px;
-      }
-      #activity-input {
-        background-color: #fff;
-        font-family: Roboto;
-        font-size: 15px;
-        font-weight: 300;
-        margin-left: 12px;
-        padding: 0 11px 0 13px;
-        text-overflow: ellipsis;
-        width: 400px;
-      }
-
-      #pac-input:focus {
-        border-color: #4d90fe;
-      }
-      #activity-input:focus {
-        border-color: #4d90fe;
-      }
-
-      .pac-container {
-        font-family: Roboto;
-      }
-
-      #type-selector {
-        color: #fff;
-        background-color: #4d90fe;
-        padding: 5px 11px 0px 11px;
-      }
-
-      #type-selector label {
-        font-family: Roboto;
-        font-size: 13px;
-        font-weight: 300;
-      }
-    </style>
     <script type="text/javascript"
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBbEXrSJEVY9_x4hRxfAEEWw-_4KniRSz8&libraries=places">
     </script>
+    <link rel="stylesheet" type="text/css" href="style.css">
     <script type="text/javascript">
 var map;
 
@@ -125,7 +19,10 @@ if(isset($_GET["lat"]))
  $lat = $_GET["lat"];
  $lon = $_GET["lon"];
  $query = strtolower($_GET["query"]);
- $string = exec("python query.py $lat $lon $query");
+ $distance = $_GET["dist"];
+
+ $string = exec("python query.py $lat $lon $query $distance");
+
  $data = json_decode($string, true);
  echo "var image = '$query.png'\n";
  
@@ -157,10 +54,10 @@ if(isset($_GET["lat"]))
  <?php
   $count = 0;
   function cmp($a, $b) {
-    if ($a['count'] == $b['count']) {
+    if ($a['score'] == $b['score']) {
         return 0;
     }
-    return ($a['count'] > $b['count']) ? -1 : 1;
+    return ($a['score'] > $b['score']) ? -1 : 1;
   }
   uasort($data, 'cmp');
 
@@ -170,12 +67,12 @@ if(isset($_GET["lat"]))
    $lat   = $entry['lat'];
    $lon   = $entry['lon'];
    $url   = $entry['url'];
-   $count = $entry['count'];
+   $score = $entry['score'];
 
    echo "var location = new google.maps.LatLng($lat,$lon);\n";
    echo "var title = '$key\\nClick to go to Wikipedia'\n;";
    echo "var name = '$key'\n;";
-   echo "var count = $count\n;";
+   echo "var score = $score\n;";
    echo "var object = {'location' : location, 'name' : name, 'title' : title, 'url' : '$url'};\n";
    //echo "var object = {'location' : location, 'title' : title};\n";
    echo "places.push(object);\n";
@@ -203,7 +100,7 @@ if(isset($_GET["lat"]))
   }
   ?>
 
-  var maxresults = 10;
+  var maxresults = 20;
 
   if (places.length < maxresults)
   {
@@ -291,6 +188,7 @@ else
       document.getElementById('pac-input'));
   map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
   var activity = document.getElementById('activity-input')
+  var distance = document.getElementById('distance-input')
 
   var searchBox = new google.maps.places.SearchBox(
     /** @type {HTMLInputElement} */(input));
@@ -314,12 +212,13 @@ else
 
                 }
             });*/
-     var lat = '?lat='.concat(places[0].geometry.location.A);
-     var lon = '\&lon='.concat(places[0].geometry.location.F);
-     var key = '\&query='.concat(activity.value);
+     var lat  = '?lat='.concat(places[0].geometry.location.A);
+     var lon  = '\&lon='.concat(places[0].geometry.location.F);
+     var dist = '\&dist='.concat(distance.value);
+     var key  = '\&query='.concat(activity.value);
      //throw new Error(activity.value);
      //location.href = 'index.php';
-     location.search = (lat.concat(lon)).concat(key);
+     location.search = ((lat.concat(lon)).concat(key)).concat(dist);
 
     if (places.length == 0) {
       return;
@@ -360,8 +259,13 @@ google.maps.event.addDomListener(window, 'load', initialize);
     </script>
   </head>
   <body>
+<!--<div class="style3"></div><div class="style_2"><span class="style3"><a href="http://aribeiro.net.br" title="Andre Ribeiro"><strong>Andre Ribeiro</strong></a></span></div>-->
+
+<?php print_header(); ?>
+
     <input id="pac-input" class="controls" type="text" placeholder="Type a location">
     <input id="activity-input" class="controls" type="text" placeholder="Type a keyword">
+    <input id="distance-input" class="controls" type="text" placeholder="Type a distance (km)">
  <?php
 }
 
@@ -374,7 +278,7 @@ google.maps.event.addDomListener(window, 'load', initialize);
     <div id="results">
       <h2>Results</h2>
       <ul id="places"></ul>
-      <button id="more">More results</button>
+      <!--<button id="more">More results</button>-->
     </div>
   <?php } ?>
   </body>
