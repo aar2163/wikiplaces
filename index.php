@@ -74,27 +74,8 @@ if(isset($_GET["lat"]))
    echo "var name = '$key'\n;";
    echo "var score = $score\n;";
    echo "var object = {'location' : location, 'name' : name, 'title' : title, 'url' : '$url'};\n";
-   //echo "var object = {'location' : location, 'title' : title};\n";
    echo "places.push(object);\n";
-   //echo "places.push(item);\n";
 
-   /*$name_mark = "mark_$count";
-   echo "var $name_mark = new google.maps.Marker({\n";
-   echo "   map: map,\n";
-   echo "   position: $name_pos,\n";
-   if($query == 'climbing' or $query == 'hiking')
-   {
-    echo "   icon: image,\n";
-   }
-   echo "   title: '$key\\nClick to go to Wikipedia'\n";
-   echo "});\n";
-
-   echo "markerBounds.extend($name_pos);";
-
-
-   echo "google.maps.event.addListener($name_mark, 'click', function() {\n";
-   echo "window.location.href = '$url'\n";
-   echo "});\n";*/
  
    $count++;
   }
@@ -107,8 +88,6 @@ if(isset($_GET["lat"]))
    maxresults = places.length;
   }
 
-  //for (var i = 0, place; place = places[i]; i++) {
-  //for (var i = 0; i < places.length; i++) {
   for (var i = 0; i < maxresults; i++) {
    var place = places[i];
    /*var image = {
@@ -276,7 +255,7 @@ google.maps.event.addDomListener(window, 'load', initialize);
    <?php
     if(isset($_GET["lat"])) { ?>
     <div id="results">
-      <h2>Results</h2>
+      <h2>Results (<a href="visualization.php?lat=<?php echo $_GET['lat'];?>&lon=<?php echo $_GET['lon'];?>&query=<?php echo $query;?>&dist=<?php echo $distance;?>">Details</a>)</h2>
       <ul id="places"></ul>
       <!--<button id="more">More results</button>-->
     </div>
