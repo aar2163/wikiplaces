@@ -10,6 +10,8 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 def get_vectorized(db, word):
 
+ word = word.lower()
+
  stored = db.queries.find_one({"query" : word})
 
  if not stored:
