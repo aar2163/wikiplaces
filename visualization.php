@@ -4,6 +4,7 @@
   <head>
     <title>Perform a query and improve this website. Hit enter and you'll see!</title>
     <link href="c3.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" type="text/css" href="site.css">
 
 <!-- Load d3.js and c3.js -->
 <script src="d3.min.js" charset="utf-8"></script>
@@ -27,17 +28,29 @@ if(isset($_GET["lat"]))
 
  $data = json_decode($string, true);
 
+  function cmp($a, $b) {
+    if ($a['score'] == $b['score']) {
+        return 0;
+    }
+    return ($a['score'] > $b['score']) ? -1 : 1;
+  }
+
+ uasort($data, 'cmp');
+
 
 ?>
  <script>
  var visits = new Array();
  var titles = new Array();
+ var counts = new Array();
  visits.push('Visits');
+ counts.push('Keyword Count');
  <?php
  foreach ($data as $key => $entry)
  {
   ?>
   visits.push(<?php echo $entry['visits']; ?>);
+  counts.push(<?php echo $entry['count']; ?>);
   titles.push('<?php echo $key; ?>');
   <?php
  }
@@ -47,9 +60,9 @@ if(isset($_GET["lat"]))
 var chart = c3.generate({
     data: {
         columns: [
-            visits
-            
+            counts, visits
         ],
+        axes: {'Visits' : 'y2'},
         type: 'bar'
     },
     legend : {
@@ -59,6 +72,9 @@ var chart = c3.generate({
       show: false,
       type : 'category',
       categories: titles
+     }, 
+     y2 : {
+      show : true
      }
     }, 
     bar: {
@@ -70,7 +86,51 @@ var chart = c3.generate({
     }
 });
 
+
  </script>
+
+ <div id="groups_small">
+	<div id="group_index" class="menu_network">
+		<h2>Title</h2>
+		<ul>
+<li><span class="tip">Title</span></li>
+ <?php
+ foreach ($data as $key => $entry)
+ {
+  $url = 'http://en.wikipedia.org/wiki/'.$key;
+?>
+<li><span class="tip"><a href="<?php echo $url; ?>"><?php echo $key;?></a></span></li>
+ <?php } ?>
+
+  </ul>
+ </div>
+
+        <div id="group_group" class="menu_network">
+		<h2>Keyword Count</h2>
+		<ul>
+<li><span class="tip">Keyword Count</span></li>
+ <?php
+ foreach ($data as $key => $entry)
+ {?>
+<li><span class="tip"><?php echo $entry['count'];?></span></li>
+ <?php } ?>
+
+      </ul>
+         </div>
+
+        <div id="group_group" class="menu_network">
+		<h2>Visits</h2>
+		<ul>
+<li><span class="tip">Visits</span></li>
+ <?php
+ foreach ($data as $key => $entry)
+ {?>
+<li><span class="tip"><?php echo $entry['visits'];?></span></li>
+ <?php } ?>
+
+      </ul>
+         </div>
+
 
 
  <?php
