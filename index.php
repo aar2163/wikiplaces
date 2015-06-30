@@ -24,7 +24,14 @@ if(isset($_GET["lat"]))
  $string = exec("python query.py $lat $lon $query $distance");
 
  $data = json_decode($string, true);
- echo "var image = '$query.png'\n";
+
+ $icon = "images/$query.png";
+
+ if (file_exists($icon))
+ {
+   echo "var image = \"$icon\";\n";
+ }
+
  
  ?>
  function initialize() {
@@ -90,14 +97,6 @@ if(isset($_GET["lat"]))
 
   for (var i = 0; i < maxresults; i++) {
    var place = places[i];
-   /*var image = {
-    url: place.icon,
-     size: new google.maps.Size(71, 71),
-     origin: new google.maps.Point(0, 0),
-     anchor: new google.maps.Point(17, 34),
-     scaledSize: new google.maps.Size(25, 25)
-   };*/
-
 
    var attribution = {
     iosDeepLinkId : 'sei lah', 
@@ -112,7 +111,12 @@ if(isset($_GET["lat"]))
 
    var marker = new google.maps.Marker({
      map: map,
-     //icon: image,
+     <?php
+      if (file_exists($icon))
+      {
+       echo "icon: image,\n";
+      }
+     ?>
      title: place.title,
      position: place.location,
      attribution : { iosDeepLinkId: 'sei lah',
@@ -211,7 +215,7 @@ else
       // Create a marker for each place.
       var marker = new google.maps.Marker({
         map: map,
-       icon: image,
+        icon: image,
         title: place.name,
         position: place.geometry.location
       });
