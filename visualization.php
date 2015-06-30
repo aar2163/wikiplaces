@@ -17,17 +17,13 @@
 
 
 <?php
-if(isset($_GET["lat"]))
+if(isset($_POST["data"]))
 {
- $lat = $_GET["lat"];
- $lon = $_GET["lon"];
- $query = strtolower($_GET["query"]);
- $distance = $_GET["dist"];
 
- $string = exec("python query.py $lat $lon $query $distance");
+ $string = $_POST['data'];
+
 
  $data = json_decode($string, true);
-
   function cmp($a, $b) {
     if ($a['score'] == $b['score']) {
         return 0;

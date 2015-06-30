@@ -259,7 +259,10 @@ google.maps.event.addDomListener(window, 'load', initialize);
    <?php
     if(isset($_GET["lat"])) { ?>
     <div id="results">
-      <h2>Results (<a href="visualization.php?lat=<?php echo $_GET['lat'];?>&lon=<?php echo $_GET['lon'];?>&query=<?php echo $query;?>&dist=<?php echo $distance;?>">Details</a>)</h2>
+ <form action="visualization.php" method="post" id="visualization">
+ <input type="hidden" name="data" value='<?php echo $string;?>'>
+      <!--<h2>Results (<a href="visualization.php?lat=<?php echo $_GET['lat'];?>&lon=<?php echo $_GET['lon'];?>&query=<?php echo $query;?>&dist=<?php echo $distance;?>">Details</a>)</h2>-->
+      <h2>Results (<a href="javascript:{}" onclick="document.getElementById('visualization').submit(); return false;">Details</a>)</form></h2>
       <ul id="places"></ul>
       <!--<button id="more">More results</button>-->
     </div>
