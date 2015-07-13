@@ -6,5 +6,5 @@ The entire English Wikipedia contents were downloaded as a 50 GB XML file. Pages
 
 * **tree_upload.py** - Parsing the XML file and uploading records to the Mongo Database
 * **query.py** - This script is called by the web interface and queries the Mongo Database, returning a list of pages associated with the chosen keyword.
-* **track** - upload a track to the Echo Nest and receive summary information about the track including key, duration, mode, tempo, time signature along with detailed track info including timbre, pitch, rhythm and loudness information.
+* **index.php** - Main PHP code. Results from query.py are sorted and shown to the user on a Google Maps layer (Javascript).
 
