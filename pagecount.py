@@ -36,36 +36,41 @@ def process_file(counts,fname):
  f.close()
 
 
+def main():
 
-connection = pymongo.MongoClient()
+ connection = pymongo.MongoClient()
 
-db = connection.wikiplaces
+ db = connection.wikiplaces
 
-counts = {}
+ counts = {}
 
 
-url = 'http://dumps.wikimedia.org/other/pagecounts-raw/2015/2015-05/'
+ url = 'http://dumps.wikimedia.org/other/pagecounts-raw/2015/2015-05/'
 
-raw_page = urllib2.urlopen(url).read()
-soup = BeautifulSoup(raw_page)
+ raw_page = urllib2.urlopen(url).read()
+ soup = BeautifulSoup(raw_page)
 
-links = soup.select('a')
+ links = soup.select('a')
 
-for i in links:
- href = i['href']
- if re.search(r'pagecounts-2015050[1-5]', href) and os.path.isfile(href):
-  print href
-  process_file(counts,href)
+ for i in links:
+  href = i['href']
+  if re.search(r'pagecounts-2015050[1-5]', href) and os.path.isfile(href):
+   print href
+   process_file(counts,href)
 
-nerrors = 0
+ nerrors = 0
 
-for k,v in counts.iteritems():
- try:
-  db.pages.update_one({"title" : k}, {"$set" : {"counts" :  v}})
- except:
-  nerrors +=1
+ for k,v in counts.iteritems():
+  try:
+   db.pages.update_one({"title" : k}, {"$set" : {"counts" :  v}})
+  except:
+   nerrors +=1
 
-print nerrors, ' database errors'
+ print nerrors, ' database errors'
+
+
+if __name__ == '__main__':
+ main()
 
 
 
