@@ -8,8 +8,6 @@ from sklearn.feature_extraction.text import CountVectorizer
 import dill
 import nltk
 
-words_list = ["climbing","hiking"]
-
 
 def get_2coords(line):
  array = []
