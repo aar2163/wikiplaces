@@ -3,24 +3,16 @@ import lxml.etree as ET
 import re
 import pymongo
 import numpy as np
+from bson.binary import Binary
 from sklearn.feature_extraction.text import CountVectorizer
+import dill
+import nltk
 
 words_list = ["climbing","hiking"]
 
 
-def should_save(text):
- try:
-  bSave = False
-  for i in words_list:
-   bSave = (bSave or re.search(i,text.text))
-  return bSave
-  #print text.text
- except:
-  return False
-
 def get_2coords(line):
  array = []
- #for j in re.finditer(r'\|\w+',line):
  for j in re.findall(r'\|\s*([0-9NEWS]+)',line):
   array.append(j)
 
@@ -45,7 +37,6 @@ def get_2coords(line):
   except:
    pass
  try:
-  #print 'toaki2', array[7]
   sign = get_sign(array[7])
   lon = deg_to_decimal(deg,sign)
  except:
@@ -59,16 +50,13 @@ def get_coord(line):
  deg = []
  sign = 1
 
- #for j in re.finditer(r'=\s*-?\d+\.?\d*',line):
  for j in re.findall(r'(?:long|lat)\_\w+\s*=\s*([0-9EWNS]+)',line):
   s = j
-  #print 's',s
   try:
    deg.append(float(s))
   except:
    # Last element encodes the sign
    sign = get_sign(s)
-   #print 'sign', s, sign
    if (sign == None):
     return None
 
@@ -88,7 +76,6 @@ def get_sign(s):
   sign = 1
  else:
   sign = None
- #print 'to aki', s
  return sign
 
 def deg_to_decimal(deg,sign):
@@ -114,6 +101,12 @@ def make_dict(element):
 
  return dic
 
+def get_2coords_float(line):
+ g = re.findall(r'(\d+\.\d+)\|([NSEW])', line)
+ lat = float(g[0][0])*get_sign(g[0][1])
+ lon = float(g[0][0])*get_sign(g[0][1])
+ return lat, lon
+
 def process_map(filename,pages, page_list):
 
  keys = {"lower": 0, "lower_colon": 0, "problemchars": 0, "other": 0}
@@ -138,12 +131,6 @@ def process_map(filename,pages, page_list):
 
    text = element.find("revision/text")
 
-   bKeep = should_save(text)
-   bKeep = True
-
-   if not bKeep:
-    continue
-
    txt = text.text
 
    try:
@@ -152,10 +139,6 @@ def process_map(filename,pages, page_list):
     txt = ' '
    lines = re.split(r'\n',txt)
 
-   #if (title.text == chosen_title):
-   # print txt
-   # exit()
-   #print title.text
 
    coord = lat = lon = None
    latline = lonline = ''
@@ -198,10 +181,10 @@ def process_map(filename,pages, page_list):
 
     # get_2coords is for format 40|10|5|N|70|20|30|W
 
-    #if(re.match(r'\| coordinates\s*=',line)):
-    # lat,lon = get_2coords(line)
-    if re.search(r'\d+\|\d+\|\d+\|[NSEW]\|\d+\|\d+\|\d+\|[NSEW]', line):
+    if re.search(r'\d+\|\d+\|\d+\|[NS]\|\d+\|\d+\|\d+\|[EW]', line):
      lat,lon = get_2coords(line)
+    if re.search(r'\d+\.\d+\|[NS]\|\d+\.\d+\|[EW]', line):
+     lat,lon = get_2coords_float(line)
      
 
     # Now call get_coord
@@ -230,9 +213,6 @@ def process_map(filename,pages, page_list):
     page['revision'].pop('text',None)
     page_list.append(page)
     print nsaved
-    #if(nsaved == 10):
-    # return 
-    #pages.insert_one(page)
 
 
  print "uploaded:",nsaved
@@ -240,49 +220,54 @@ def process_map(filename,pages, page_list):
 
  return
 
+def tokenize_stem(text):
+    """
+    We will use the default tokenizer from TfidfVectorizer, combined with the nltk SnowballStemmer.
+    """
+    tokens = default_tokenizer(text)
+    stemmed = map(stemmer.stem, tokens)
+    return stemmed
 
 
-connection = pymongo.MongoClient()
+def main():
 
-db = connection.wikipedia
+ connection = pymongo.MongoClient()
 
-pages = db.pages
+ db = connection.wikipedia
 
-page_list = []
+ pages = db.pages
 
-vocabulary = []
+ page_list = []
 
-f = open('vocabulary.dat', 'r')
+ stemmer = nltk.stem.SnowballStemmer("english", ignore_stopwords=True)
 
-for line in f:
- vocabulary.append(line.strip()) 
+ default_tokenizer = CountVectorizer().build_tokenizer()
 
-#vectorizer = CountVectorizer( analyzer='word', stop_words = 'english', min_df = 0.005, max_df = 0.1, strip_accents = 'unicode', binary = True, dtype = np.int8 )
-vectorizer = CountVectorizer( analyzer='word', stop_words = 'english', vocabulary = vocabulary, strip_accents = 'unicode', dtype = np.int16 )
-X = vectorizer.fit_transform( process_map( sys.argv[1], pages, page_list ))
+ vectorizer = CountVectorizer(min_df = 100, stop_words = nltk.corpus.stopwords.words('english'), tokenizer=tokenize_stem)
+
+ X = vectorizer.fit_transform( process_map( sys.argv[1], pages, page_list ))
 
 
-size = len(page_list)
+ f = open('wiki_vectorizer.dill', 'w')
+ dill.dump(vectorizer, f)
+ f.close()
 
-nerror = 0
+ size = len(page_list)
 
-for i in range(size):
- page = page_list[i]
- page['revision']['text_array'] = X[i].toarray()[0].tolist()
- try:
-  pages.insert_one(page)
- except:
-  nerror +=1
+ nerror = 0
+
+
+ for i in range(size):
+  page = page_list[i]
+  out = dill.dumps(X[i])
+  page['revision']['text_array'] = Binary(out)
+  try:
+   pages.insert_one(page)
+  except:
+   nerror +=1
  
-print nerror,'database errors'
+ print nerror,'database errors'
 
-print X[0].toarray()[0]
-print X.shape[0],len(page_list)
-corpus = vectorizer.get_feature_names()
+if __name__ == '__main__':
+ main()
 
-print len(corpus)
-
-
-db.corpus.replace_one({}, {'corpus' : corpus}, upsert=True)
-
-#process_map(sys.argv[1],pages)

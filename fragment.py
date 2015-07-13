@@ -7,9 +7,9 @@ print "<?xml version=\"1.0\"?>"
 print "<mediawiki>"
 
 for line in f:
- if(count > 4955000 and count < 4956000):
+ if(count > 30460000 and count < 30470000):
   print line.strip()
- if(count > 4956000):
+ if(count > 30470000):
   exit()
  count += 1
 
