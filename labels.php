@@ -2,20 +2,22 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Wikiplaces - Data Incubator - Andre Ribeiro</title>
+    <title>Perform a query and improve this website. Hit enter and you'll see!</title>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
     <script type="text/javascript"
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBbEXrSJEVY9_x4hRxfAEEWw-_4KniRSz8&libraries=places">
     </script>
-    <link rel="stylesheet" type="text/css" href="style.css">
     <script type="text/javascript">
-var map;
+
 
 
 <?php
 if(isset($_GET["lat"]))
 {
+ echo '</script>';
+ echo '<link rel="stylesheet" type="text/css" href="site.css">';
+ echo '</head><body>';
  $lat = $_GET["lat"];
  $lon = $_GET["lon"];
  $query = strtolower($_GET["query"]);
@@ -24,146 +26,70 @@ if(isset($_GET["lat"]))
  $string = exec("python query.py $lat $lon $query $distance");
 
  $data = json_decode($string, true);
- echo "var image = '$query.png'\n";
- 
+
  ?>
- function initialize() {
-   var mapOptions = {
-     zoom: 8
-   };
-   map = new google.maps.Map(document.getElementById('map-canvas'),
-       mapOptions);
 
-   placesList = document.getElementById('places');
+ <p><h2>Note: The purpose of this page is to help me improve the ranking system for wikiplaces.biz.</h2></p>
+ <p><h3>There are some entries that should simply not be associated with a given query, like Manhattan showing up for the query "museum". I want to use supervised learning for identifying these.</h3></p>
+ <p><h3>I therefore need labels for training. Help me out by checking entries that should and should not be given as results to the query you just submitted. </h3></p>
+ <p><h3>I also note that you don't need to fill out the whole thing. Thanks!</h3></p>
 
-   createMarkers(map);
+ <h1>Results of the query <?php echo $query;?></h1>
 
- }
- function createMarkers(map) {
-  var markerBounds = new google.maps.LatLngBounds();
-  var lat = <?php echo $lat; ?>;
-  var lon = <?php echo $lon; ?>;
-  var pos = new google.maps.LatLng(lat,lon);
-  markerBounds.extend(pos);
 
-  var places = new Array();
-  var attributions = new Array();
-  var markers = new Array();
-  var urls = new Array();
+ <form action="update_db_query.php" method="post">
+
+ <input type="hidden" name="query" value="<?php echo $query; ?>">
+
+ <div id="groups_small">
+	<div id="group_index" class="menu_network">
+		<h2>Title</h2>
+		<ul>
+<li><span class="tip">TITLE</span></li>
+ <?php
+ foreach ($data as $key => $entry)
+ {
+  $url = 'http://en.wikipedia.org/wiki/'.$key;
+?>
+<li><span class="tip"><a href="<?php echo $url; ?>"><?php echo $key;?></a></span></li>
+ <?php } ?>
+
+  </ul>
+ </div>
+
+        <div id="group_group" class="menu_network">
+		<h2>Positive</h2>
+		<ul>
+<li><span class="tip">TRUE</span></li>
+ <?php
+ foreach ($data as $key => $entry)
+ {?>
+<li><span class="tip"><input type="checkbox" class="radio" name="<?php echo $key; ?>" value="1"></span></li>
+ <?php } ?>
+
+      </ul>
+         </div>
+
+         <div id="group_s1" class="menu_network">
+         	<h2>Group</h2>
+         	<ul>
+<li><span class="tip">FALSE</span></li>
+ <?php
+ foreach ($data as $key => $entry)
+ {?>
+<li><span class="tip"><input type="checkbox" class="radio" name="<?php echo $key; ?>" value="0"></span></li>
+ <?php } ?>
+      </ul>
+
+      </div>
+   </div><div style="clear: both"></div>
+
+ <input type="submit"><br>
+ <a href="labels.php">Go back</a>
 
  <?php
-  $count = 0;
-  function cmp($a, $b) {
-    if ($a['score'] == $b['score']) {
-        return 0;
-    }
-    return ($a['score'] > $b['score']) ? -1 : 1;
-  }
-  uasort($data, 'cmp');
 
-  foreach ($data as $key => $entry)
-  {
-   $name_pos = "pos_$count";
-   $lat   = $entry['lat'];
-   $lon   = $entry['lon'];
-   $url   = $entry['url'];
-   $score = $entry['score'];
-
-   echo "var location = new google.maps.LatLng($lat,$lon);\n";
-   echo "var title = '$key\\nClick to go to Wikipedia'\n;";
-   echo "var name = '$key'\n;";
-   echo "var score = $score\n;";
-   echo "var object = {'location' : location, 'name' : name, 'title' : title, 'url' : '$url'};\n";
-   //echo "var object = {'location' : location, 'title' : title};\n";
-   echo "places.push(object);\n";
-   //echo "places.push(item);\n";
-
-   /*$name_mark = "mark_$count";
-   echo "var $name_mark = new google.maps.Marker({\n";
-   echo "   map: map,\n";
-   echo "   position: $name_pos,\n";
-   if($query == 'climbing' or $query == 'hiking')
-   {
-    echo "   icon: image,\n";
-   }
-   echo "   title: '$key\\nClick to go to Wikipedia'\n";
-   echo "});\n";
-
-   echo "markerBounds.extend($name_pos);";
-
-
-   echo "google.maps.event.addListener($name_mark, 'click', function() {\n";
-   echo "window.location.href = '$url'\n";
-   echo "});\n";*/
  
-   $count++;
-  }
-  ?>
-
-  var maxresults = 20;
-
-  if (places.length < maxresults)
-  {
-   maxresults = places.length;
-  }
-
-  //for (var i = 0, place; place = places[i]; i++) {
-  //for (var i = 0; i < places.length; i++) {
-  for (var i = 0; i < maxresults; i++) {
-   var place = places[i];
-   /*var image = {
-    url: place.icon,
-     size: new google.maps.Size(71, 71),
-     origin: new google.maps.Point(0, 0),
-     anchor: new google.maps.Point(17, 34),
-     scaledSize: new google.maps.Size(25, 25)
-   };*/
-
-
-   var attribution = {
-    iosDeepLinkId : 'sei lah', 
-    source: 'wikiplaces', 
-    webUrl: place.url};
-
-   urls.push(place.url);
-
-   attributions.push(attribution);
-
-   //throw new Error(place.url);
-
-   var marker = new google.maps.Marker({
-     map: map,
-     //icon: image,
-     title: place.title,
-     position: place.location,
-     attribution : { iosDeepLinkId: 'sei lah',
-                     source: 'wikiplaces',
-                     webUrl: String(i)}
-   });
-
-   markers.push(marker);
-
-   google.maps.event.addListener(marker, 'click', (function(marker, i) 
-   {
-    return function() {
-     window.location.href = places[i].url;
-    }
-   })(marker, i));
-
-
-
-   placesList.innerHTML += '<li>' + '<a href="' + place.url + '">' + place.name + '</a></li>';
-
-   markerBounds.extend(place.location);
-  }
-  map.fitBounds(markerBounds);
-  map.setCenter(pos);
- }
- google.maps.event.addDomListener(window, 'load', initialize);
-    </script>
-  </head>
-  <body>
- <?php
 }
 else
 {
@@ -257,12 +183,13 @@ else
 google.maps.event.addDomListener(window, 'load', initialize);
 
     </script>
+    <link rel="stylesheet" type="text/css" href="style.css">
   </head>
   <body>
 <!--<div class="style3"></div><div class="style_2"><span class="style3"><a href="http://aribeiro.net.br" title="Andre Ribeiro"><strong>Andre Ribeiro</strong></a></span></div>-->
 
 <?php print_header(); ?>
-
+<p><h2>Perform a query and improve this website. Just hit enter and you'll see!</h2></p>
     <input id="pac-input" class="controls" type="text" placeholder="Type a location">
     <input id="activity-input" class="controls" type="text" placeholder="Type a keyword">
     <input id="distance-input" class="controls" type="text" placeholder="Type a distance (km)">
@@ -271,16 +198,11 @@ google.maps.event.addDomListener(window, 'load', initialize);
 
 ?>
 
-
  <div id="map-canvas"></div>
    <?php
     if(isset($_GET["lat"])) { ?>
-    <div id="results">
-      <h2>Results</h2>
-      <ul id="places"></ul>
-      <!--<button id="more">More results</button>-->
-    </div>
   <?php } ?>
   </body>
 </html>
+
 
