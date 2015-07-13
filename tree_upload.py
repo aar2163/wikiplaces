@@ -4,7 +4,7 @@ import re
 import pymongo
 import numpy as np
 from bson.binary import Binary
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 import dill
 import nltk
 
@@ -222,7 +222,9 @@ def tokenize_stem(text):
     """
     We will use the default tokenizer from TfidfVectorizer, combined with the nltk SnowballStemmer.
     """
+    default_tokenizer = HashingVectorizer().build_tokenizer()
     tokens = default_tokenizer(text)
+    stemmer = nltk.stem.SnowballStemmer("english", ignore_stopwords=True)
     stemmed = map(stemmer.stem, tokens)
     return stemmed
 
@@ -231,22 +233,17 @@ def main():
 
  connection = pymongo.MongoClient()
 
- db = connection.wikipedia
+ db = connection.wikiplaces
 
  pages = db.pages
 
  page_list = []
 
- stemmer = nltk.stem.SnowballStemmer("english", ignore_stopwords=True)
-
- default_tokenizer = CountVectorizer().build_tokenizer()
-
- vectorizer = CountVectorizer(min_df = 100, stop_words = nltk.corpus.stopwords.words('english'), tokenizer=tokenize_stem)
+ vectorizer = HashingVectorizer(stop_words = nltk.corpus.stopwords.words('english'), tokenizer=tokenize_stem)
 
  X = vectorizer.fit_transform( process_map( sys.argv[1], pages, page_list ))
 
-
- f = open('wiki_vectorizer.dill', 'w')
+ f = open('wiki_vectorizer-hashing.dill', 'w')
  dill.dump(vectorizer, f)
  f.close()
 
