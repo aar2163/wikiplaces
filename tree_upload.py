@@ -116,8 +116,6 @@ def process_map(filename,pages, page_list):
  ntotal = 0
  nsaved = 0
 
- chosen_title = 'Yosemite National Park'
-
 
  for event, element in cursor:
   if(element.tag == "page" and event == "end"):
@@ -151,8 +149,6 @@ def process_map(filename,pages, page_list):
 
     bLat = bLon = False
 
-    if(title.text == chosen_title):
-     print line
 
     elat = re.findall(r'latitude\s*=\s*([\d\.\-]+)', line)
     elon = re.findall(r'longitude\s*=\s*([\d\.\-]+)', line)
