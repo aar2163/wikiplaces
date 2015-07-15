@@ -62,6 +62,7 @@ def main():
 
  for k,v in counts.iteritems():
   try:
+   print k
    db.pages.update_one({"title" : k}, {"$set" : {"counts" :  v}})
   except:
    nerrors +=1

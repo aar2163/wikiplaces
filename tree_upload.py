@@ -105,39 +105,10 @@ def get_2coords_float(line):
  lon = float(g[0][0])*get_sign(g[0][1])
  return lat, lon
 
-def process_map(filename,pages, page_list):
-
- keys = {"lower": 0, "lower_colon": 0, "problemchars": 0, "other": 0}
-
- cursor = ET.iterparse(filename, events = ("start", "end"))
-
- event, root = cursor.next()
-
- ntotal = 0
- nsaved = 0
-
-
- for event, element in cursor:
-  if(element.tag == "page" and event == "end"):
-   root.clear()  ## save memory
-
-   ntotal += 1
-
-   title = element.find("title")
-
-   text = element.find("revision/text")
-
-   txt = text.text
-
-   try:
-    txt = txt.encode('utf-8')
-   except:
-    txt = ' '
-   lines = re.split(r'\n',txt)
-
-
+def process_coord(lines):
    coord = lat = lon = None
    latline = lonline = ''
+
    for line in lines:
 
     # There are several different ways in which coordinates
@@ -194,7 +165,41 @@ def process_map(filename,pages, page_list):
     if(lat and lon):
      coord = [lon,lat]
      print coord
-     break
+     return coord
+
+def process_map(filename,pages, page_list):
+
+ keys = {"lower": 0, "lower_colon": 0, "problemchars": 0, "other": 0}
+
+ cursor = ET.iterparse(filename, events = ("start", "end"))
+
+ event, root = cursor.next()
+
+ ntotal = 0
+ nsaved = 0
+
+
+ for event, element in cursor:
+  if(element.tag == "page" and event == "end"):
+   root.clear()  ## save memory
+
+   ntotal += 1
+
+   title = element.find("title")
+
+   text = element.find("revision/text")
+
+   txt = text.text
+
+   try:
+    txt = txt.encode('utf-8')
+   except:
+    txt = ' '
+   lines = re.split(r'\n',txt)
+
+   coord = process_coord(lines)
+
+
 
    if coord:
     nsaved += 1
