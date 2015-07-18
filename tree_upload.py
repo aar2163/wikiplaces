@@ -3,25 +3,16 @@ import lxml.etree as ET
 import re
 import pymongo
 import numpy as np
-from sklearn.feature_extraction.text import CountVectorizer
+from bson.binary import Binary
+from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
+import dill
+import nltk
 
-words_list = ["climbing","hiking"]
-
-
-def should_save(text):
- try:
-  bSave = False
-  for i in words_list:
-   bSave = (bSave or re.search(i,text.text))
-  return bSave
-  #print text.text
- except:
-  return False
 
 def get_2coords(line):
  array = []
- for j in re.finditer(r'\|\w+',line):
-  array.append(j.group(0)[1:])
+ for j in re.findall(r'\|\s*([0-9NEWS]+)',line):
+  array.append(j)
 
  lat = lon = None
 
@@ -57,9 +48,8 @@ def get_coord(line):
  deg = []
  sign = 1
 
- for j in re.finditer(r'=\s*-?\d+\.?\d*',line):
-  s = j.group(0)[1:].strip()
-  print 's',s
+ for j in re.findall(r'(?:long|lat)\_\w+\s*=\s*([0-9EWNS]+)',line):
+  s = j
   try:
    deg.append(float(s))
   except:
@@ -68,7 +58,7 @@ def get_coord(line):
    if (sign == None):
     return None
 
- print deg,line
+ #print deg,line
 
  if(len(deg) == 0):
   return None
@@ -109,51 +99,16 @@ def make_dict(element):
 
  return dic
 
-def process_map(filename,pages, page_list):
+def get_2coords_float(line):
+ g = re.findall(r'(\d+\.\d+)\|([NSEW])', line)
+ lat = float(g[0][0])*get_sign(g[0][1])
+ lon = float(g[0][0])*get_sign(g[0][1])
+ return lat, lon
 
- keys = {"lower": 0, "lower_colon": 0, "problemchars": 0, "other": 0}
-
- cursor = ET.iterparse(filename, events = ("start", "end"))
-
- event, root = cursor.next()
-
- ntotal = 0
- nsaved = 0
-
- chosen_title = 'Yosemite National Park'
-
-
- for event, element in cursor:
-  if(element.tag == "page" and event == "end"):
-   root.clear()  ## save memory
-
-   ntotal += 1
-
-   title = element.find("title")
-
-   text = element.find("revision/text")
-
-   bKeep = should_save(text)
-   bKeep = True
-
-   if not bKeep:
-    continue
-
-   txt = text.text
-
-   try:
-    txt = txt.encode('utf-8')
-   except:
-    txt = ' '
-   lines = re.split(r'\n',txt)
-
-   #if (title.text == chosen_title):
-   # print txt
-   # exit()
-   #print title.text
-
+def process_coord(lines):
    coord = lat = lon = None
    latline = lonline = ''
+
    for line in lines:
 
     # There are several different ways in which coordinates
@@ -165,8 +120,22 @@ def process_map(filename,pages, page_list):
 
     bLat = bLon = False
 
-    if(title.text == chosen_title):
-     print line
+
+    elat = re.findall(r'latitude\s*=\s*([\d\.\-]+)', line)
+    elon = re.findall(r'longitude\s*=\s*([\d\.\-]+)', line)
+
+    if elat:
+     try:
+      lat = float(elat[0])
+      bLat = True
+     except:
+      pass
+    if elon:
+     try:
+      lon = float(elon[0])
+      bLon = True
+     except:
+      pass
 
     if(re.match(r'\| lat_\w+\s*=',line)):
      latline = latline + line
@@ -177,8 +146,11 @@ def process_map(filename,pages, page_list):
 
     # get_2coords is for format 40|10|5|N|70|20|30|W
 
-    if(re.match(r'\| coordinates\s*=',line)):
+    if re.search(r'\d+\|\d+\|\d+\|[NS]\|\d+\|\d+\|\d+\|[EW]', line):
      lat,lon = get_2coords(line)
+    if re.search(r'\d+\.\d+\|[NS]\|\d+\.\d+\|[EW]', line):
+     lat,lon = get_2coords_float(line)
+     
 
     # Now call get_coord
     if(re.search(r'lat_NS\s*=',line)):
@@ -192,12 +164,47 @@ def process_map(filename,pages, page_list):
 
     if(lat and lon):
      coord = [lon,lat]
-     #print coord
-     break
+     print coord
+     return coord
+
+def process_map(filename,pages, page_list):
+
+ keys = {"lower": 0, "lower_colon": 0, "problemchars": 0, "other": 0}
+
+ cursor = ET.iterparse(filename, events = ("start", "end"))
+
+ event, root = cursor.next()
+
+ ntotal = 0
+ nsaved = 0
+
+
+ for event, element in cursor:
+  if(element.tag == "page" and event == "end"):
+   root.clear()  ## save memory
+
+   ntotal += 1
+
+   title = element.find("title")
+
+   text = element.find("revision/text")
+
+   txt = text.text
+
+   try:
+    txt = txt.encode('utf-8')
+   except:
+    txt = ' '
+   lines = re.split(r'\n',txt)
+
+   coord = process_coord(lines)
+
+
 
    if coord:
     nsaved += 1
     page = make_dict(element)
+    #print page['title']
     page['location'] = {'type': 'Point', 'coordinates': coord}
 
     #Insert document into MongoDB collection
@@ -205,9 +212,6 @@ def process_map(filename,pages, page_list):
     page['revision'].pop('text',None)
     page_list.append(page)
     print nsaved
-    #if(nsaved == 10):
-    # return 
-    #pages.insert_one(page)
 
 
  print "uploaded:",nsaved
@@ -215,49 +219,51 @@ def process_map(filename,pages, page_list):
 
  return
 
+def tokenize_stem(text):
+    """
+    We will use the default tokenizer from TfidfVectorizer, combined with the nltk SnowballStemmer.
+    """
+    default_tokenizer = HashingVectorizer().build_tokenizer()
+    tokens = default_tokenizer(text)
+    stemmer = nltk.stem.SnowballStemmer("english", ignore_stopwords=True)
+    stemmed = map(stemmer.stem, tokens)
+    return stemmed
 
 
-connection = pymongo.MongoClient()
+def main():
 
-db = connection.wikipedia
+ connection = pymongo.MongoClient()
 
-pages = db.pages
+ db = connection.wikiplaces
 
-page_list = []
+ pages = db.pages
 
-vocabulary = []
+ page_list = []
 
-f = open('vocabulary.dat', 'r')
+ vectorizer = HashingVectorizer(stop_words = nltk.corpus.stopwords.words('english'), tokenizer=tokenize_stem)
 
-for line in f:
- vocabulary.append(line.strip()) 
+ X = vectorizer.fit_transform( process_map( sys.argv[1], pages, page_list ))
 
-#vectorizer = CountVectorizer( analyzer='word', stop_words = 'english', min_df = 0.005, max_df = 0.1, strip_accents = 'unicode', binary = True, dtype = np.int8 )
-vectorizer = CountVectorizer( analyzer='word', stop_words = 'english', vocabulary = vocabulary, strip_accents = 'unicode', dtype = np.int16 )
-X = vectorizer.fit_transform( process_map( sys.argv[1], pages, page_list ))
+ f = open('wiki_vectorizer-hashing.dill', 'w')
+ dill.dump(vectorizer, f)
+ f.close()
+
+ size = len(page_list)
+
+ nerror = 0
 
 
-size = len(page_list)
-
-nerror = 0
-
-for i in range(size):
- page = page_list[i]
- page['revision']['text_array'] = X[i].toarray()[0].tolist()
- try:
-  pages.insert_one(page)
- except:
-  nerror +=1
+ for i in range(size):
+  page = page_list[i]
+  out = dill.dumps(X[i])
+  page['revision']['text_array'] = Binary(out)
+  try:
+   pages.insert_one(page)
+  except:
+   nerror +=1
  
-print nerror,'database errors'
+ print nerror,'database errors'
 
-print X[0].toarray()[0]
-print X.shape[0],len(page_list)
-corpus = vectorizer.get_feature_names()
+if __name__ == '__main__':
+ main()
 
-print len(corpus)
-
-
-db.corpus.replace_one({}, {'corpus' : corpus}, upsert=True)
-
-#process_map(sys.argv[1],pages)
