@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Perform a query and improve this website. Hit enter and you'll see!</title>
+    <title>Detailed Results</title>
     <link href="c3.css" rel="stylesheet" type="text/css">
     <link rel="stylesheet" type="text/css" href="site.css">
 
