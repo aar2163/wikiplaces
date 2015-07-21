@@ -7,6 +7,7 @@ from bson.binary import Binary
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 import dill
 import nltk
+import gzip
 
 
 def get_2coords(line):
@@ -167,11 +168,13 @@ def process_coord(lines):
      print coord
      return coord
 
-def process_map(filename,pages, page_list):
+def process_map(fname,pages, page_list):
 
  keys = {"lower": 0, "lower_colon": 0, "problemchars": 0, "other": 0}
 
- cursor = ET.iterparse(filename, events = ("start", "end"))
+ f = gzip.open(fname, 'rb')
+
+ cursor = ET.iterparse(f, events = ("start", "end"))
 
  event, root = cursor.next()
 
@@ -223,7 +226,7 @@ def tokenize_stem(text):
     """
     We will use the default tokenizer from TfidfVectorizer, combined with the nltk SnowballStemmer.
     """
-    default_tokenizer = HashingVectorizer().build_tokenizer()
+    default_tokenizer = HashingVectorizer(norm=None, non_negative = True).build_tokenizer()
     tokens = default_tokenizer(text)
     stemmer = nltk.stem.SnowballStemmer("english", ignore_stopwords=True)
     stemmed = map(stemmer.stem, tokens)
@@ -240,7 +243,7 @@ def main():
 
  page_list = []
 
- vectorizer = HashingVectorizer(stop_words = nltk.corpus.stopwords.words('english'), tokenizer=tokenize_stem)
+ vectorizer = HashingVectorizer(norm=None, non_negative = True, stop_words = nltk.corpus.stopwords.words('english'), tokenizer=tokenize_stem)
 
  X = vectorizer.fit_transform( process_map( sys.argv[1], pages, page_list ))
 
