@@ -1,7 +1,6 @@
 import pymongo
 import dill
 import re
-import pandas as pd
 import numpy as np
 from scipy.sparse import vstack
 from sklearn.feature_extraction.text import HashingVectorizer
@@ -11,9 +10,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.feature_selection import chi2, SelectKBest
 
 
-def get_train():
+def get_train(word):
 
- connection = pymongo.MongoClient()
+ #connection = pymongo.MongoClient()
+ connection = pymongo.MongoClient("mongodb://104.236.201.75")
  db = connection.wikiplaces
 
 
@@ -22,10 +22,13 @@ def get_train():
 
  #query_vec = dill.loads(stored['dill'])
 
+
+ labels_string = 'labels.' + word
+
  vectorizer = dill.load(open('wiki_vectorizer-hashing.dill', 'r'))
 
 
- cursor = db.pages.find({"labels.museum" : {"$exists" : 1}})
+ cursor = db.pages.find({labels_string : {"$exists" : 1}})
 
  min_count = 1e10
  max_count = 0
@@ -40,8 +43,9 @@ def get_train():
 
  for i in cursor:
   entry_vec = dill.loads(i['revision']['text_array'])
-  print i['title'],i['labels']['museum']
-  lb = np.array(i['labels']['museum'][0])
+  print i['title'].encode('utf-8'),i['labels'][word]
+  #lb = np.array(i['labels'][word][0])
+  lb = np.array(i['labels'][word])
   mlb = int(np.median(lb))
   labels.append([mlb])
   vecs.append(entry_vec)
@@ -53,14 +57,18 @@ def get_train():
 
 def main():
 
- X, Y = get_train()
+ word = 'museum'
+
+ X, Y = get_train(word)
+
+ cf_string = 'classifier.' + word
 
 
- connection = pymongo.MongoClient()
+ connection = pymongo.MongoClient("mongodb://104.236.201.75")
  db = connection.wikiplaces
 
  vectorizer = dill.load(open('wiki_vectorizer-hashing.dill', 'r'))
- query_vec = vectorizer.transform(['museum']).transpose()
+ query_vec = vectorizer.transform([word]).transpose()
 
 
  #print vstack(vecs)
@@ -79,14 +87,14 @@ def main():
 
  cf.fit(X,Y)
 
- origin = [ -73.9609, 40.8086 ]
- origin = [ 2.353841, 48.858577]
+ origin = [ -73.984402, 40.752031 ]
+ #origin = [ 2.353841, 48.858577]
 
  query = {"location": {"$near": {"$geometry": \
          {"type": "Point", "coordinates": origin}, \
           "$maxDistance": 10000, "$minDistance": 0}}}
 
- cursor = db.pages.find(query)
+ cursor = db.pages.find()
 
  vecs = []
 
@@ -94,14 +102,22 @@ def main():
   entry_vec = dill.loads(i['revision']['text_array'])
   vecs.append(entry_vec)
 
+  title = i['title']
+
   length = float(entry_vec.sum(axis=1)[0][0])
   count = float(entry_vec.dot(query_vec).toarray()[0][0])
   ratio = count/length
 
+
   if count < 4:
    continue
-  print i['title']
-  print cf.predict(entry_vec)
+
+  print title.encode('utf-8')
+
+  cl = cf.predict(entry_vec)[0]
+  print cl
+  
+  db.pages.update_one({"title" : title}, {"$set" : {cf_string :  cl}})
 
  
 

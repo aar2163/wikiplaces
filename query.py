@@ -90,9 +90,6 @@ cursor = pages.find(query)
 #cursor = pages.aggregate([geonear, unwind])
 
 
-fname = word + '.json'
-
-#output = open(fname, 'w')
 entry = {}
 
 vectorizer = dill.load(open('wiki_vectorizer-hashing.dill'))
@@ -112,6 +109,12 @@ for i in cursor:
   lon,lat = i['location']['coordinates']
   entry_vec = dill.loads(i['revision']['text_array'])
   count = float(entry_vec.dot(query_vec).toarray()[0][0])
+
+  try:
+   if i['classifier'][word] == 0:
+    continue
+  except:
+   pass
 
   if count < 4:
    continue

@@ -23,7 +23,7 @@ if(isset($_GET["lat"]))
  $query = strtolower($_GET["query"]);
  $distance = $_GET["dist"];
 
- $string = exec("python query.py $lat $lon $query $distance");
+ $string = exec("python query_labels.py $lat $lon $query $distance");
 
  $data = json_decode($string, true);
 
