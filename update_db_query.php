@@ -1,7 +1,7 @@
 <?php
 
  $mongo = new MongoClient("mongodb://104.236.201.75");
- $db = $mongo->selectDB("wikipedia");
+ $db = $mongo->selectDB("wikiplaces");
  $col = $db->pages;
 
 
