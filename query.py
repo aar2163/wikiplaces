@@ -6,7 +6,7 @@ import dill
 import os
 import nltk
 from bson.binary import Binary
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import HashingVectorizer
 
 def get_vectorized(db, word):
 
@@ -32,11 +32,11 @@ def get_vectorized(db, word):
 #connection = pymongo.MongoClient("mongodb://localhost")
 connection = pymongo.MongoClient("mongodb://104.236.201.75")
 
-default_tokenizer = CountVectorizer().build_tokenizer()
+default_tokenizer = HashingVectorizer(norm= None, non_negative = True).build_tokenizer()
 stemmer = nltk.stem.SnowballStemmer("english", ignore_stopwords=True)
 
 
-db = connection.wikipedia
+db = connection.wikiplaces
 
 pages = db.pages
 
@@ -95,8 +95,10 @@ fname = word + '.json'
 #output = open(fname, 'w')
 entry = {}
 
+vectorizer = dill.load(open('wiki_vectorizer-hashing.dill'))
 
-query_vec = get_vectorized(db, word)
+#query_vec = get_vectorized(db, word)
+query_vec = vectorizer.transform([word]).transpose()
 
 min_count = 1e10
 max_count = 0
