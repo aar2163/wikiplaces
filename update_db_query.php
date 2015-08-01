@@ -1,6 +1,7 @@
 <?php
 
- $mongo = new MongoClient("mongodb://104.236.201.75");
+ #$mongo = new MongoClient("mongodb://104.236.201.75");
+ $mongo = new MongoClient("mongodb://localhost");
  $db = $mongo->selectDB("wikiplaces");
  $col = $db->pages;
 

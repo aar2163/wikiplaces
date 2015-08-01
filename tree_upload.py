@@ -103,7 +103,7 @@ def make_dict(element):
 def get_2coords_float(line):
  g = re.findall(r'(\d+\.\d+)\|([NSEW])', line)
  lat = float(g[0][0])*get_sign(g[0][1])
- lon = float(g[0][0])*get_sign(g[0][1])
+ lon = float(g[1][0])*get_sign(g[1][1])
  return lat, lon
 
 def process_coord(lines):
@@ -261,6 +261,7 @@ def main():
   out = dill.dumps(X[i])
   page['revision']['text_array'] = Binary(out)
   try:
+   pages.update_one({"title" : page['title']}, {"$set" : {cf_string :  cl}})
    pages.insert_one(page)
   except:
    nerror +=1

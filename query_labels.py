@@ -30,7 +30,8 @@ def get_vectorized(db, word):
 
 
 #connection = pymongo.MongoClient("mongodb://localhost")
-connection = pymongo.MongoClient("mongodb://104.236.201.75")
+connection = pymongo.MongoClient()
+#connection = pymongo.MongoClient("mongodb://104.236.201.75")
 
 default_tokenizer = HashingVectorizer(norm= None, non_negative = True).build_tokenizer()
 stemmer = nltk.stem.SnowballStemmer("english", ignore_stopwords=True)

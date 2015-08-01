@@ -8,12 +8,15 @@ import nltk
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.feature_selection import chi2, SelectKBest
+from sklearn.neural_network import BernoulliRBM
+from sklearn.pipeline import Pipeline
+import sys
 
 
 def get_train(word):
 
- #connection = pymongo.MongoClient()
- connection = pymongo.MongoClient("mongodb://104.236.201.75")
+ connection = pymongo.MongoClient()
+ #connection = pymongo.MongoClient("mongodb://104.236.201.75")
  db = connection.wikiplaces
 
 
@@ -57,14 +60,14 @@ def get_train(word):
 
 def main():
 
- word = 'museum'
+ word = sys.argv[1]
 
  X, Y = get_train(word)
 
  cf_string = 'classifier.' + word
 
-
- connection = pymongo.MongoClient("mongodb://104.236.201.75")
+ connection = pymongo.MongoClient()
+ #connection = pymongo.MongoClient("mongodb://104.236.201.75")
  db = connection.wikiplaces
 
  vectorizer = dill.load(open('wiki_vectorizer-hashing.dill', 'r'))
@@ -77,9 +80,23 @@ def main():
  #print 'alki', vecs[1]
 
 
- sel = SelectKBest(chi2,k=10)
+ sel = SelectKBest(chi2,k=500)
  Xp = sel.fit_transform(X,Y)
  print Xp.toarray()
+ Xp = Xp.toarray()
+
+ Xp[Xp > 1] = 1
+
+ logistic = LogisticRegression()
+ rbm = BernoulliRBM(random_state=0, verbose=True)
+
+ classifier = Pipeline(steps=[('rbm', rbm), ('logistic', logistic)])
+ #classifier = Pipeline(steps=[('logistic', logistic)])
+
+ classifier.fit(Xp,Y)
+
+ print classifier.predict(Xp)
+
 
  cf = MultinomialNB()
 
@@ -96,11 +113,11 @@ def main():
 
  cursor = db.pages.find()
 
- vecs = []
+ #vecs = []
 
  for i in cursor:
   entry_vec = dill.loads(i['revision']['text_array'])
-  vecs.append(entry_vec)
+  #vecs.append(entry_vec)
 
   title = i['title']
 
@@ -112,16 +129,21 @@ def main():
   if count < 4:
    continue
 
-  print title.encode('utf-8')
 
-  cl = cf.predict(entry_vec)[0]
-  print cl
+  Xp = sel.transform(entry_vec)
+  Xp[Xp > 1] = 1
+
+  #cl = cf.predict(entry_vec)[0]
+  cl = classifier.predict(Xp)[0]
+  if cl > 0:
+   print title.encode('utf-8')
+   print cl
   
-  db.pages.update_one({"title" : title}, {"$set" : {cf_string :  cl}})
+  #db.pages.update_one({"title" : title}, {"$set" : {cf_string :  cl}})
 
  
 
- X = vstack(vecs)
+ #X = vstack(vecs)
 
  #print cf.predict(X)
 

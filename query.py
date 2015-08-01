@@ -29,8 +29,8 @@ def get_vectorized(db, word):
  return query_vec
 
 
-#connection = pymongo.MongoClient("mongodb://localhost")
-connection = pymongo.MongoClient("mongodb://104.236.201.75")
+connection = pymongo.MongoClient("mongodb://localhost")
+#connection = pymongo.MongoClient("mongodb://104.236.201.75")
 
 default_tokenizer = HashingVectorizer(norm= None, non_negative = True).build_tokenizer()
 stemmer = nltk.stem.SnowballStemmer("english", ignore_stopwords=True)
@@ -139,7 +139,7 @@ for i in cursor:
 
   title = title.encode('utf-8')
   title = re.sub(r'(?<!\\)\'',r'\'',title)
-  #print title
+
   entry[title] = {}
 
   if re.search(' ' + word + ' ', title.lower()):
@@ -163,9 +163,6 @@ for i in cursor:
   #if(n > 10):
   # break
 
-print 'cheguei'
-
-#print n
 
 delta_count = max_count - min_count
 delta_visits = max_visits - min_visits

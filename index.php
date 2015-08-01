@@ -6,7 +6,7 @@
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
     <script type="text/javascript"
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBbEXrSJEVY9_x4hRxfAEEWw-_4KniRSz8&libraries=places">
+      src="https://maps.googleapis.com/maps/api/js?v=3.20&key=AIzaSyBbEXrSJEVY9_x4hRxfAEEWw-_4KniRSz8&libraries=places">
     </script>
     <link rel="stylesheet" type="text/css" href="style.css">
     <script type="text/javascript">
@@ -19,9 +19,21 @@ if(isset($_GET["lat"]))
  $lat = $_GET["lat"];
  $lon = $_GET["lon"];
  $query = strtolower($_GET["query"]);
- $distance = $_GET["dist"];
+
+ if (isset($_GET["dist"]))
+ {
+  $distance = $_GET["dist"];
+ }
+ else
+ {
+  $distance = 10.0;
+ }
+
+
+ 
 
  $string = exec("python query.py $lat $lon $query $distance");
+
 
  $data = json_decode($string, true);
 
@@ -181,6 +193,7 @@ else
   // pick list. Retrieve the matching places for that item.
   google.maps.event.addListener(searchBox, 'places_changed', function() {
     var places = searchBox.getPlaces();
+    //echo places;
     //document.write(places[0].position)
     /*$.ajax({
                 type: "GET",
