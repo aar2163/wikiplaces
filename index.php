@@ -19,10 +19,14 @@ if(isset($_GET["lat"]))
  $lat = $_GET["lat"];
  $lon = $_GET["lon"];
  $query = strtolower($_GET["query"]);
-
  if (isset($_GET["dist"]))
  {
   $distance = $_GET["dist"];
+
+  if($_GET["dist"] == '')
+  {
+   $distance = 10.0;
+  }
  }
  else
  {
